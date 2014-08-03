@@ -7,7 +7,7 @@ module Data.Functor.Infix.TH (
 
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad (replicateM)
-import Language.Haskell.TH -- (Q, Exp(Exp, AppE))
+import Language.Haskell.TH (Q, Exp(..), Type(..), Dec(..), Pat(..), TyVarBndr(..), Pred(..), Body(..), newName, mkName)
 
 declareInfixFmapN :: Int -> Q [Dec]
 declareInfixFmapN n = do
