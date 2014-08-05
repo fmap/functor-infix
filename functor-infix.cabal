@@ -5,7 +5,7 @@ version:
 synopsis:
   Compositions of functors.
 homepage:
-  https://github.com/fmap/infix-fmap
+  https://github.com/fmap/functor-infix
 license:
   MIT
 license-file:

@@ -7,13 +7,13 @@ module Data.Functor.Infix.TH (
 
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad (replicateM)
-import Language.Haskell.TH (Q, Exp(..), Type(..), Dec(..), Pat(..), TyVarBndr(..), Pred(..), Body(..), newName, mkName)
+import Language.Haskell.TH (Q, Exp(..), Type(..), Dec(..), Pat(..), TyVarBndr(..), Pred(..), Body(..), newName, mkName, Fixity(..), FixityDirection(..))
 
 declareInfixFmapN :: Int -> Q [Dec]
 declareInfixFmapN n = do
   let name = mkName $ "<" ++ replicate n '$' ++ ">"
   (exp, typ) <- (,) <$> fmapExpN n <*> fmapTypeN n
-  return [SigD name typ, ValD (VarP name) (NormalB exp) []] -- + Fixity?
+  return [SigD name typ, ValD (VarP name) (NormalB exp) [], InfixD (Fixity 4 InfixL) name]
 
 fmapExpN :: Int -> Q Exp
 fmapExpN n = do
