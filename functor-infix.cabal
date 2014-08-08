@@ -25,6 +25,7 @@ library
   exposed-modules:
     Data.Functor.Infix
   other-modules:
+    Data.Functor.Infix.Definitions,
     Data.Functor.Infix.TH,
     Data.Functor.Infix.Utilities
   build-depends:
