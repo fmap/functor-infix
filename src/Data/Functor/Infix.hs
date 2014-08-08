@@ -2,7 +2,8 @@
 
 module Data.Functor.Infix where
 
-import Data.Functor.Infix.TH (declareInfixFmapN)
-import Data.Monoid (Monoid(mconcat))
+import Data.Functor.Infix.TH (declareInfixFmapN, declareInfixPamfN)
+import Data.Functor.Infix.Utilities (concatMapM)
 
-$(fmap mconcat $ mapM declareInfixFmapN [1..100]) -- No one will ever need 'fmap' composed more than a hundred times.
+$(concatMapM declareInfixFmapN [1..100])
+$(concatMapM declareInfixPamfN [1..100])

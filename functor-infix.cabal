@@ -25,7 +25,8 @@ library
   exposed-modules:
     Data.Functor.Infix
   other-modules:
-    Data.Functor.Infix.TH 
+    Data.Functor.Infix.TH,
+    Data.Functor.Infix.Utilities
   build-depends:
     base             == 4.*,
     template-haskell >= 2.8 && < 3.0
