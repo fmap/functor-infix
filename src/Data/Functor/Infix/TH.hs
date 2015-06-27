@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP             #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections   #-}
 {-# LANGUAGE PatternSynonyms #-}
@@ -21,7 +22,11 @@ fmapTypeOfDegree :: Int -> Q Type
 fmapTypeOfDegree n = do
   names@(a:b:fs) <- (mkName "a":) <$> (mkName "b":) <$> replicateM n (newName "f")
   let variables = map PlainTV names
+#if MIN_VERSION_template_haskell(2,10,0)
+      constraints = AppT (ConT $ mkName "Functor") . VarT <$> fs
+#else
       constraints = map (ClassP (mkName "Functor") . pure . VarT) fs
+#endif
       wrap hask = foldr AppT (VarT hask) $ map VarT fs
       type_ = (VarT a ~> VarT b) ~> wrap a ~> wrap b
   pure $ ForallT variables constraints type_

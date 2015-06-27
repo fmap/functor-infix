@@ -28,11 +28,9 @@ library
     Data.Functor.Infix.Definitions,
     Data.Functor.Infix.TH
   build-depends:
-    base             >= 4.7 && < 4.8,
-    template-haskell >= 2.8 && < 2.10
+    base             >= 4.7 && < 4.9,
+    template-haskell >= 2.8 && < 2.11
   hs-source-dirs:
     src
   default-language:
     Haskell2010
-  ghc-options:
-    -Wall -fno-warn-name-shadowing
