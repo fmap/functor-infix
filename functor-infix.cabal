@@ -1,9 +1,9 @@
 name:
   functor-infix
 version:
-  0.0.2
+  0.0.3
 synopsis:
-  Compositions of functors.
+  Infix operators for mapping over compositions of functors. Lots of them.
 homepage:
   https://github.com/fmap/functor-infix
 license:
