@@ -1,44 +1,65 @@
-{-# LANGUAGE TemplateHaskell  #-}
-{-# LANGUAGE TupleSections    #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections   #-}
+{-# LANGUAGE PatternSynonyms #-}
 
-module Data.Functor.Infix.TH (
-  declareInfixFmapN,
-  declareInfixPamfN
+module Data.Functor.Infix.TH
+( declareInfixFmapForFunctorCompositionOfDegree
+, declareFlippedInfixFmapForFunctorCompositionOfDegree
+, declareInfixFmapN
+, declareInfixPamfN
 ) where
 
-import Control.Applicative ((<$>), (<*>))
+import Control.Applicative ((<$>), (<*>), pure)
 import Control.Monad (replicateM)
 import Language.Haskell.TH (Q, Exp(..), Type(..), Dec(..), Pat(..), TyVarBndr(..), Pred(..), Body(..), newName, mkName, Fixity(..), FixityDirection(..))
 
+(~>) :: Type -> Type -> Type
+x ~> y = AppT ArrowT x `AppT` y
+infixr 0 ~>
+
+fmapTypeOfDegree :: Int -> Q Type
+fmapTypeOfDegree n = do
+  names@(a:b:fs) <- (mkName "a":) <$> (mkName "b":) <$> replicateM n (newName "f")
+  let variables = map PlainTV names
+      constraints = map (ClassP (mkName "Functor") . pure . VarT) fs
+      wrap hask = foldr AppT (VarT hask) $ map VarT fs
+      type_ = (VarT a ~> VarT b) ~> wrap a ~> wrap b
+  pure $ ForallT variables constraints type_
+
+fmapExpressionOfDegree :: Int -> Q Exp
+fmapExpressionOfDegree n = do
+  (id_, fmap_) <- (,) <$> [|id|] <*> [|fmap|]
+  pure $ foldr (AppE . AppE fmap_) id_ (replicate n fmap_)
+
+declareInfixWithDegree :: (Int -> Q Exp) -> (Int -> Q Type) -> Fixity -> Char -> (Int -> Q [Dec])
+declareInfixWithDegree expressionOfDegree typeOfDegree fixity symbol n = do
+  let name = mkName $ "<" ++ replicate n symbol ++ ">"
+  (expression, type_) <- (,) <$> expressionOfDegree n <*> typeOfDegree n
+  pure $ SigD name type_
+       : ValD (VarP name) (NormalB expression) []
+       : InfixD fixity name
+       : []
+
+declareInfixFmapForFunctorCompositionOfDegree :: Int -> Q [Dec]
+declareInfixFmapForFunctorCompositionOfDegree = declareInfixWithDegree fmapExpressionOfDegree fmapTypeOfDegree (Fixity 4 InfixL) '$'
+
+pattern x :> y = AppT ArrowT x `AppT` y
+
+(<$$>) :: Functor f => Functor g => (a -> b) -> f (g a) -> f (g b)
+(<$$>) = fmap fmap fmap
+infixl 1 <$$>
+
+declareFlippedInfixFmapForFunctorCompositionOfDegree :: Int -> Q [Dec]
+declareFlippedInfixFmapForFunctorCompositionOfDegree = do
+  let flipExpression = AppE $ VarE (mkName "flip")
+      flipType (ForallT variables constraints (a :> (b :> c))) = ForallT variables constraints (b ~> (a ~> c))
+      flipType _ = error "The impossible happened!"
+  declareInfixWithDegree (flipExpression <$$> fmapExpressionOfDegree) (flipType <$$> fmapTypeOfDegree) (Fixity 1 InfixL) '&'
+
+{-# DEPRECATED declareInfixFmapN "Use 'declareInfixFmapForFunctorCompositionOfDegree' and/or reconsider your life choices." #-}
 declareInfixFmapN :: Int -> Q [Dec]
-declareInfixFmapN = declareInfixN fmapExpN fmapTypeN (Fixity 4 InfixL) '$'
+declareInfixFmapN = declareInfixFmapForFunctorCompositionOfDegree
 
-fmapExpN :: Int -> Q Exp
-fmapExpN n = do
-  (idt, fmp) <- (,) <$> [|id|] <*> [|fmap|]
-  return $ foldr (AppE . AppE fmp) idt (replicate n fmp)
-
-fmapTypeN :: Int -> Q Type
-fmapTypeN n = do
-  (varsAB, varsFu) <- ([mkName "a", mkName "b"],) <$> replicateM n (newName "f")
-  let vrs = PlainTV <$> varsAB ++ varsFu
-      cns = ClassP (mkName "Functor") . return . VarT <$> varsFu
-      wrp = \n -> foldr AppT (VarT n) $ VarT <$> varsFu
-      typ = AppT (AppT ArrowT (AppT (AppT ArrowT (VarT $ varsAB!!0)) (VarT $ varsAB!!1))) (AppT (AppT ArrowT . wrp $ varsAB!!0) (wrp $ varsAB!!1))
-  return $ ForallT vrs cns typ
-
+{-# DEPRECATED declareInfixPamfN "Use 'declareFlippedInfixFmapForFunctorCompositionOfDegree' and/or reconsider your life choices." #-}
 declareInfixPamfN :: Int -> Q [Dec]
-declareInfixPamfN = declareInfixN pamfExpN pamfTypeN (Fixity 1 InfixL) '&'
-
-pamfExpN :: Int -> Q Exp
-pamfExpN n = [|flip|] >>= \flip -> AppE flip <$> fmapExpN n
-
-pamfTypeN :: Int -> Q Type
-pamfTypeN n = fmapTypeN n >>= \(ForallT crs wrp (AppT (AppT ArrowT ab) (AppT (AppT ArrowT x) y))) ->
-  return $ ForallT crs wrp (AppT (AppT ArrowT x) (AppT (AppT ArrowT ab) y))
-
-declareInfixN :: (Int -> Q Exp) -> (Int -> Q Type) -> Fixity -> Char -> Int -> Q [Dec]
-declareInfixN expN typN fixity chr n = do
-  let name = mkName $ "<" ++ replicate n chr ++ ">"
-  (exp, typ) <- (,) <$> expN n <*> typN n
-  return [SigD name typ, ValD (VarP name) (NormalB exp) [], InfixD fixity name]
+declareInfixPamfN = declareFlippedInfixFmapForFunctorCompositionOfDegree

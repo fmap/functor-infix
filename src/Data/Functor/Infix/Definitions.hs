@@ -2,8 +2,8 @@
 
 module Data.Functor.Infix.Definitions where
 
-import Data.Functor.Infix.TH (declareInfixFmapN, declareInfixPamfN)
-import Data.Functor.Infix.Utilities (concatMapM)
+import Control.Monad (msum)
+import Data.Functor.Infix.TH (declareInfixFmapForFunctorCompositionOfDegree, declareFlippedInfixFmapForFunctorCompositionOfDegree)
 
-$(concatMapM declareInfixFmapN [1..20])
-$(concatMapM declareInfixPamfN [1..20])
+$(fmap msum $ mapM declareInfixFmapForFunctorCompositionOfDegree [1..20])
+$(fmap msum $ mapM declareFlippedInfixFmapForFunctorCompositionOfDegree [1..20])
