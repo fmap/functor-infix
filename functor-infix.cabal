@@ -28,8 +28,8 @@ library
     Data.Functor.Infix.Definitions,
     Data.Functor.Infix.TH
   build-depends:
-    base             >= 4.7 && < 4.9,
-    template-haskell >= 2.8 && < 2.11
+    base             >= 4.7 && < 4.10,
+    template-haskell >= 2.8 && < 2.12
   hs-source-dirs:
     src
   default-language:
