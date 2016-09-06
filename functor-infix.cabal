@@ -1,7 +1,7 @@
 name:
   functor-infix
 version:
-  0.0.3
+  0.0.4
 synopsis:
   Infix operators for mapping over compositions of functors. Lots of them.
 homepage:
