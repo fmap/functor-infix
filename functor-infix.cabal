@@ -1,7 +1,7 @@
 name:
   functor-infix
 version:
-  0.0.4
+  0.0.5
 synopsis:
   Infix operators for mapping over compositions of functors. Lots of them.
 homepage:
@@ -13,7 +13,7 @@ license-file:
 author:
   vi
 maintainer:
-  vi@zalora.com
+  vi@computational.law
 category:
   Data
 build-type:
